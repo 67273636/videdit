@@ -7,12 +7,13 @@ import tempfile
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QMenuBar, QMenu, QToolBar, QStatusBar, QFileDialog,
-    QMessageBox, QDockWidget, QLabel, QShortcut,
+    QMessageBox, QDockWidget, QLabel,
     QListWidget, QListWidgetItem, QSplitter, QFrame,
     QDialog, QGridLayout, QLineEdit, QSpinBox, QDoubleSpinBox,
     QComboBox, QCheckBox, QPushButton, QGroupBox,
     QTextEdit, QTabWidget, QProgressBar, QSlider,
     QStyledItemDelegate, QStyleOptionViewItem,
+    QScrollArea, QTreeWidget, QTreeWidgetItem,
 )
 from PyQt6.QtCore import (
     Qt, QTimer, QSize, QPoint, QThread, pyqtSignal,
@@ -21,6 +22,7 @@ from PyQt6.QtCore import (
 from PyQt6.QtGui import (
     QAction, QKeySequence, QPixmap, QImage, QPainter,
     QPen, QColor, QBrush, QFont, QCursor, QDrag,
+    QShortcut, QClipboard,
 )
 from ffmpeg_core import (
     probe, check_ffmpeg, generate_thumbnail,
