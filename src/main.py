@@ -6,15 +6,20 @@ videdit - 视频编辑工具
 import sys
 import os
 
-# 开发模式下添加 src 目录到 path
-if __name__ == "__main__":
+def _setup_path():
+    """设置模块搜索路径"""
     if getattr(sys, 'frozen', False):
-        # PyInstaller 打包模式
+        # PyInstaller 打包模式：src/ 在 _MEIPASS 根目录
         base = sys._MEIPASS
-        sys.path.insert(0, os.path.join(base, 'src'))
     else:
-        # 开发模式
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        # 开发模式：脚本在 src/main.py，往上一级是项目根
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    from main_window import main
+    # 项目根加入 sys.path，这样 'from src.xxx import yyy' 正常工作
+    if base not in sys.path:
+        sys.path.insert(0, base)
+
+if __name__ == "__main__":
+    _setup_path()
+    from src.main_window import main
     main()
