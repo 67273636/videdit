@@ -2,9 +2,10 @@
 videdit - FFmpeg 核心封装
 所有视频/音频处理操作在此模块
 """
+import sys
+import os
 import subprocess
 import json
-import os
 import re
 import math
 import uuid
@@ -19,26 +20,30 @@ from dataclasses import dataclass, field
 # 路径 & 环境
 # ─────────────────────────────────────────────
 
-def _get_ffmpeg_path() -> str:
-    """获取 ffmpeg 可执行文件路径"""
-    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    # PyInstaller 打包后的路径
-    if getattr(sys, '_MEIPASS', False):
-        base = sys._MEIPASS
-    bundled = os.path.join(base, 'ffmpeg_bin', 'bin')
-    # 优先用打包的 ffprobe
-    local_ffmpeg = os.path.join(bundled, 'ffmpeg.exe')
-    if os.path.exists(local_ffmpeg):
+def _get_ffmpeg_bin() -> str:
+    """获取 ffmpeg bin 目录路径"""
+    if getattr(sys, 'frozen', False):
+        # PyInstaller 打包模式：--add-data "src:src"，src/ 在 _MEIPASS/src/
+        base = os.path.join(sys._MEIPASS, 'src')
+    else:
+        # 开发模式：ffmpeg_core.py 在 src/ 目录
+        base = os.path.dirname(os.path.abspath(__file__))
+    bundled = os.path.join(base, 'ffmpeg_bin')
+    return bundled
+
+
+def _find_ffmpeg(name: str) -> str:
+    """查找 ffmpeg 可执行文件"""
+    bundled = os.path.join(_get_ffmpeg_bin(), name)
+    if os.path.exists(bundled):
         return bundled
-    # 开发环境 PATH
-    return ''
+    # 退回到 PATH 中的同名命令
+    return name
 
 
-import sys
-_ffmpeg_bin = _get_ffmpeg_path()
-FFMPEG = os.path.join(_ffmpeg_bin, 'ffmpeg.exe') if _ffmpeg_bin else 'ffmpeg'
-FFPROBE = os.path.join(_ffmpeg_bin, 'ffprobe.exe') if _ffmpeg_bin else 'ffprobe'
-FFPLAY = os.path.join(_ffmpeg_bin, 'ffplay.exe') if _ffmpeg_bin else 'ffplay'
+FFMPEG = _find_ffmpeg('ffmpeg.exe' if os.name == 'nt' else 'ffmpeg')
+FFPROBE = _find_ffmpeg('ffprobe.exe' if os.name == 'nt' else 'ffprobe')
+FFPLAY = _find_ffmpeg('ffplay.exe' if os.name == 'nt' else 'ffplay')
 
 
 def _cmd(name: str, *args) -> List[str]:
