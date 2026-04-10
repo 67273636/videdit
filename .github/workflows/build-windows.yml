@@ -3,23 +3,22 @@ name: Build Windows EXE
 on:
   push:
     branches: [main]
-    tags:
-      - 'v*'
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
-jobs:
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Download FFmpeg
         run: |
@@ -27,23 +26,22 @@ jobs:
           unzip -q ffmpeg.zip
           mv ffmpeg-*-win64-gpl ffmpeg_bin
 
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller PyQt6 rich
+      - name: Install dependencies
+        run: pip install --upgrade pip pyinstaller PyQt6 rich
 
       - name: Bundle FFmpeg
         run: |
-          mkdir -p src/ffmpeg_bin
-          cp -r ffmpeg_bin/bin src/ffmpeg_bin/
+          mkdir src\\ffmpeg_bin
+          copy ffmpeg_bin\\bin\\ffmpeg.exe src\\ffmpeg_bin\\
+          copy ffmpeg_bin\\bin\\ffprobe.exe src\\ffmpeg_bin\\
+          copy ffmpeg_bin\\bin\\ffplay.exe src\\ffmpeg_bin\\
 
-      - name: Build EXE with PyInstaller
+      - name: Build EXE
         run: |
-          python -m PyInstaller --name videdit --onefile --noconsole --add-data "src/ffmpeg_bin;ffmpeg_bin" --collect-all PyQt6 src/main.py
+          python -m PyInstaller --name videdit --onefile --noconsole --add-data "src;src" --hidden-import PyQt6 --hidden-import PyQt6.QtCore --hidden-import PyQt6.QtGui --hidden-import PyQt6.QtWidgets --hidden-import rich src\\main.py
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: videdit-windows-exe
-          path: dist/videdit.exe
+          name: videdit-exe
+          path: dist\\videdit.exe
           retention-days: 90
