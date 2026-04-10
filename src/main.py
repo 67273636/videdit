@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
-"""videdit - 主入口"""
-import sys, os
+"""
+videdit - 视频编辑工具
+主入口文件
+"""
+import sys
+import os
 
-def _setup():
+
+def _setup_path():
+    """设置模块搜索路径，让 import 在开发模式和 PyInstaller 打包模式都能工作"""
     if getattr(sys, 'frozen', False):
-        _base = sys._MEIPASS
-        _src = os.path.join(_base, 'src')
-        # 把项目根加入 sys.path，这样 src/ 里的模块能 import 同级其他模块
-        if _base not in sys.path:
-            sys.path.insert(0, _base)
+        # PyInstaller 打包模式：--add-data "src:src" 把 src/ 放入 _MEIPASS/src/
+        base = sys._MEIPASS
     else:
-        _base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        _src = os.path.dirname(os.path.abspath(__file__))
-        if _base not in sys.path:
-            sys.path.insert(0, _base)
+        # 开发模式：脚本在 src/main.py，往上一级是项目根
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    _ffmpeg = os.path.join(_src, 'ffmpeg_bin')
-    if _ffmpeg not in os.environ.get('PATH',''):
-        os.environ['PATH'] = _ffmpeg + os.pathsep + os.environ.get('PATH','')
+    # 把项目根加入 sys.path，这样 "from main_window import" 可以找到 src/main_window
+    if base not in sys.path:
+        sys.path.insert(0, base)
 
+
+if __name__ == "__main__":
+    _setup_path()
+    # PyInstaller --add-data "src:src" 打包后，src/ 在 _MEIPASS/src/，
+    # 所以这里直接 from main_window 而不是 from main_window
     from main_window import main
     main()
-
-if __name__ == '__main__':
-    _setup()
